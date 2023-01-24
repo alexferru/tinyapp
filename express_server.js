@@ -52,6 +52,13 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+app.post("/urls/:id/edit", (req, res) => {
+  const editedLongURL = req.body.editedLongURL;
+  const shortURL = req.params.id;
+  urlDatabase[shortURL] = editedLongURL;
+  res.redirect("/urls");
+});
+
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
   res.redirect(longURL);
