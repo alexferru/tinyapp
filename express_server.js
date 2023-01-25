@@ -7,6 +7,7 @@ app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+//Helpers
 const generateRandomString = (length) => {
   let result = "";
   const characters =
@@ -16,6 +17,17 @@ const generateRandomString = (length) => {
     result += characters.charAt(Math.floor(Math.random() * charactersLength));
   }
   return result;
+};
+
+const getUserByEmail = (users, email) => {
+  let foundUser = {};
+  for (const key of Object.keys(users)) {
+    if (users[key]["email"] === email) {
+      foundUser = users[key];
+      return foundUser;
+    }
+  }
+  return null;
 };
 
 //Databases
@@ -102,12 +114,21 @@ app.post("/logout", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+  if (!email || !password) {
+    res.status(400).end("Invalid field");
+  }
+  if (getUserByEmail(users, email)) {
+    res.status(400).end("Email address is already registered");
+  }
   const userId = generateRandomString(10);
   users[userId] = {
     id: userId,
     email: req.body.email,
     password: req.body.password,
   };
+
   res.cookie("user_id", userId);
   console.log(users);
   res.redirect("urls/");
