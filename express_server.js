@@ -18,10 +18,27 @@ const generateRandomString = () => {
   return result;
 };
 
+//Databases
+
 const urlDatabase = {
   b2xVn2: "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com",
 };
+
+const users = {
+  userRandomID: {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur",
+  },
+  user2RandomID: {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk",
+  },
+};
+
+//Renders
 
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase, username: req.cookies["username"] };
@@ -34,6 +51,21 @@ app.get("/urls/new", (req, res) => {
   };
   res.render("urls_new", templateVars);
 });
+
+app.get("/urls/:id", (req, res) => {
+  const templateVars = {
+    id: req.params.id,
+    longURL: urlDatabase[req.params.id],
+    username: req.cookies["username"],
+  };
+  res.render("urls_show", templateVars);
+});
+
+app.get("/urls/register", (req, res) => {
+  res.render("urls_register");
+});
+
+//Posts
 
 app.post("/urls", (req, res) => {
   console.log(req.body); // Log the POST request body to the console
@@ -49,21 +81,14 @@ app.post("/urls/:id/delete", (req, res) => {
   res.redirect("/urls");
 });
 
-app.get("/urls/:id", (req, res) => {
-  const templateVars = {
-    id: req.params.id,
-    longURL: urlDatabase[req.params.id],
-    username: req.cookies["username"],
-  };
-  res.render("urls_show", templateVars);
-});
-
 app.post("/urls/:id/edit", (req, res) => {
   const editedLongURL = req.body.editedLongURL;
   const shortURL = req.params.id;
   urlDatabase[shortURL] = editedLongURL;
   res.redirect("/urls");
 });
+
+//Redirects
 
 app.post("/login", (req, res) => {
   res.cookie("username", req.body.username);
@@ -79,6 +104,8 @@ app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
   res.redirect(longURL);
 });
+
+//Listen
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
