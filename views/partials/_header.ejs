@@ -23,13 +23,13 @@
       id="navbarNavAltMarkup"
     >
       <div class="navbar-nav">
-        <% if (username) { %>
+        <% if (user) { %>
         <div class="nav-item active text-white d-flex">
           <span class="mb-0 align-self-center">Hello,</span>
           <span
             class="mb-0 ml-1 font-italic font-weight-bold text-light align-self-center"
           >
-            <%= username %>
+            <%= user.email %>
           </span>
           <span class="mb-0 mr-3 align-self-center">!</span>
           <form method="POST" action="/logout" class="form-inline">
