@@ -1,5 +1,5 @@
 <header>
-  <nav class="navbar navbar-expand-md navbar-dark bg-success">
+  <nav class="navbar navbar-expand-md navbar-dark bg-dark">
     <a class="navbar-brand" href="/urls">TinyApp</a>
     <button
       class="navbar-toggler"
@@ -17,22 +17,43 @@
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
+    </div>
+    <div
+      class="collapse navbar-collapse justify-content-end"
+      id="navbarNavAltMarkup"
+    >
       <div class="navbar-nav">
-        <form class="nav-item form-inline" method="POST" action="/login">
-          <div class="form-group mb-2">
-            <input
-              class="form-control"
-              type="text"
-              name="username"
-              placeholder="Username"
-              style="width: 250px; margin: 1em"
-            />
-            <button type="submit" class="btn btn-primary">Login</button>
-          </div>
-        </form>
-        <a class="nav-item text-white align-self-center mb-1 mx-4">
-          <%= username %>
-        </a>
+        <% if (username) { %>
+        <div class="nav-item active text-white d-flex">
+          <span class="mb-0 align-self-center">Hello,</span>
+          <span
+            class="mb-0 ml-1 font-italic font-weight-bold text-light align-self-center"
+          >
+            <%= username %>
+          </span>
+          <span class="mb-0 mr-3 align-self-center">!</span>
+          <form method="POST" action="/logout" class="form-inline">
+            <button type="submit" class="btn btn-outline-info my-2 my-sm-0">
+              Logout
+            </button>
+          </form>
+        </div>
+        <% } else { %>
+        <div class="navbar-nav">
+          <form class="nav-item form-inline" method="POST" action="/login">
+            <div class="form-group mb-2">
+              <input
+                class="form-control"
+                type="text"
+                name="username"
+                placeholder="Username"
+                style="width: 250px; margin: 1em"
+              />
+              <button type="submit" class="btn btn-outline-info">Login</button>
+            </div>
+          </form>
+          <% } %>
+        </div>
       </div>
     </div>
   </nav>
