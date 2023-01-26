@@ -48,6 +48,9 @@ const getUserByEmail = (database, email) => {
 //Renders
 
 app.get("/urls", (req, res) => {
+  if (!users[req.cookies["user_id"]]) {
+    res.redirect("/login");
+  }
   const templateVars = {
     urls: urlDatabase,
     user: users[req.cookies["user_id"]],
@@ -56,6 +59,9 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
+  if (!users[req.cookies["user_id"]]) {
+    res.redirect("/login");
+  }
   const templateVars = {
     user: users[req.cookies["user_id"]],
   };
@@ -63,6 +69,9 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
+  if (users[req.cookies["user_id"]]) {
+    res.redirect("/urls");
+  }
   const templateVars = {
     urls: urlDatabase,
     user: users[req.cookies["user_id"]],
@@ -71,6 +80,9 @@ app.get("/register", (req, res) => {
 });
 
 app.get("/urls/:id", (req, res) => {
+  if (!urlDatabase[req.params.id]) {
+    res.send("URL not found");
+  }
   const templateVars = {
     id: req.params.id,
     longURL: urlDatabase[req.params.id],
@@ -90,9 +102,10 @@ app.get("/login", (req, res) => {
 //Posts
 
 app.post("/urls", (req, res) => {
-  console.log(req.body); // Log the POST request body to the console
+  if (!req.cookies["user_id"]) {
+    res.redirect("/login");
+  }
   const shortURL = generateRandomString(6);
-  console.log("Short URL:", shortURL);
   const longURL = req.body.longURL;
   urlDatabase[shortURL] = longURL;
   res.redirect(`/urls/${shortURL}`);
@@ -104,6 +117,9 @@ app.post("/urls/:id/delete", (req, res) => {
 });
 
 app.post("/urls/:id/edit", (req, res) => {
+  if (users[req.cookies["user_id"]]) {
+    res.redirect("/login");
+  }
   const editedLongURL = req.body.editedLongURL;
   const shortURL = req.params.id;
   urlDatabase[shortURL] = editedLongURL;
