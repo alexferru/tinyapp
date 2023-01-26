@@ -131,7 +131,7 @@ app.post("/login", (req, res) => {
 
 app.post("/logout", (req, res) => {
   res.clearCookie("user_id");
-  res.redirect("urls/");
+  res.redirect("/login");
 });
 
 app.post("/register", (req, res) => {
@@ -140,7 +140,7 @@ app.post("/register", (req, res) => {
   if (!email || !password) {
     res.status(400).end("Invalid field");
   }
-  if (!getUserByEmail(users, email)) {
+  if (getUserByEmail(users, email)) {
     res.status(400).end("Email address is already registered");
   }
   const userId = generateRandomString(10);
