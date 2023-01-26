@@ -7,29 +7,6 @@ app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-//Helpers
-const generateRandomString = (length) => {
-  let result = "";
-  const characters =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  const charactersLength = characters.length;
-  for (let i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength));
-  }
-  return result;
-};
-
-const getUserByEmail = (users, email) => {
-  let foundUser = {};
-  for (const key of Object.keys(users)) {
-    if (users[key]["email"] === email) {
-      foundUser = users[key];
-      return foundUser;
-    }
-  }
-  return null;
-};
-
 //Databases
 
 const urlDatabase = {
@@ -50,6 +27,24 @@ const users = {
   },
 };
 
+//Helpers
+const generateRandomString = (length) => {
+  let result = "";
+  const characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const charactersLength = characters.length;
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return result;
+};
+
+const getUserByEmail = (database, email) => {
+  return Object.keys(database).find(
+    (userID) => database[userID].email === email
+  );
+};
+
 //Renders
 
 app.get("/urls", (req, res) => {
@@ -67,8 +62,12 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new", templateVars);
 });
 
-app.get("/urls/register", (req, res) => {
-  res.render("urls_register");
+app.get("/register", (req, res) => {
+  const templateVars = {
+    urls: urlDatabase,
+    user: users[req.cookies["user_id"]],
+  };
+  res.render("urls_register", templateVars);
 });
 
 app.get("/urls/:id", (req, res) => {
@@ -78,6 +77,14 @@ app.get("/urls/:id", (req, res) => {
     user: users[req.cookies["user_id"]],
   };
   res.render("urls_show", templateVars);
+});
+
+app.get("/login", (req, res) => {
+  const templateVars = {
+    urls: urlDatabase,
+    user: users[req.cookies["user_id"]],
+  };
+  res.render("urls_login", templateVars);
 });
 
 //Posts
@@ -104,8 +111,22 @@ app.post("/urls/:id/edit", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  res.cookie("username", req.body.username);
-  res.redirect("urls/");
+  const email = req.body.email;
+  const password = req.body.password;
+  const userID = getUserByEmail(users, email);
+  if (!email && !password) {
+    res.status(400).end("Invalid field");
+  }
+  if (!getUserByEmail(users, email)) {
+    res.status(403).end("No account associated with the email address");
+  }
+
+  if (users[userID].password !== password) {
+    res.status(403).end("Incorrect Password");
+  }
+
+  res.cookie("user_id", userID);
+  res.redirect("/urls");
 });
 
 app.post("/logout", (req, res) => {
@@ -119,7 +140,7 @@ app.post("/register", (req, res) => {
   if (!email || !password) {
     res.status(400).end("Invalid field");
   }
-  if (getUserByEmail(users, email)) {
+  if (!getUserByEmail(users, email)) {
     res.status(400).end("Email address is already registered");
   }
   const userId = generateRandomString(10);
