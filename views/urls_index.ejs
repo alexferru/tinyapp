@@ -6,7 +6,6 @@
       name="viewport"
       content="width=device-width, initial-scale=1, shrink-to-fit=no"
     />
-
     <!-- Bootstrap CSS -->
     <link
       rel="stylesheet"
@@ -17,32 +16,45 @@
     <title>TinyApp</title>
   </head>
   <body>
-    <%- include('partials/_header') %>
+    <%- include('partials/_header') %> <% if (!user) {%>
+      <main style="margin: 1em">
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+          <strong>Please Log in to see this content.</strong>
+          <button
+            type="button"
+            class="close"
+            data-dismiss="alert"
+            aria-label="Close"
+          >
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+    <% } else {%>
     <main style="margin: 1em">
       <h3>My URLs</h3>
       <table class="table">
         <thead>
           <tr>
-            <th scope="col">Short URL ID</th>
+            <th scope="col">Short URL</th>
             <th scope="col">Long URL</th>
           </tr>
         </thead>
         <tbody>
-          <% for (let id in urls) { %>
+          <% for (let url in urls) { %>
           <tr>
-            <td><%= id %></td>
-            <td><%= urls[id] %></td>
+            <td><a href="/u/<%= url %>"><%= url %></a></td>
+            <td><%= urls[url].longURL %></td>
             <td>
-              <form method="POST" action="/urls/<%= id %>/delete">
-                <button type="submit" class="btn btn-outline-danger">
-                  Delete
+              <form method="GET" action="/urls/<%= url %>">
+                <button type="submit" class="btn btn-outline-primary">
+                  Edit
                 </button>
               </form>
             </td>
             <td>
-              <form method="GET" action="/urls/<%= id %>">
-                <button type="submit" class="btn btn-outline-primary">
-                  Edit
+              <form method="POST" action="/urls/<%= url %>/delete">
+                <button type="submit" class="btn btn-outline-danger">
+                  Delete
                 </button>
               </form>
             </td>
@@ -51,6 +63,7 @@
         </tbody>
       </table>
     </main>
+    <% } %>
     <!-- Bootstrap JS -->
     <script
       src="https://code.jquery.com/jquery-3.3.1.slim.min.js"

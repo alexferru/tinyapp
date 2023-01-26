@@ -1,183 +1,185 @@
+//------ SETUP ------
 const express = require("express");
 const cookieParser = require("cookie-parser");
+const cookieSession = require("cookie-session");
+const bcrypt = require("bcrypt");
 const app = express();
 const PORT = 8080;
+
+const {
+  generateRandomString,
+  getUserByEmail,
+  urlsForUser,
+  createUser,
+  authenticateUser,
+} = require("./helpers");
 
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(
+  cookieSession({
+    name: "session",
+    keys: [
+      "A rush of blood to the head",
+      "Viva la vida or death and all his friends",
+    ],
+  })
+);
 
-//Databases
+//------ DATABASES ------
+
+const hashedPass1 = bcrypt.hashSync("user", 10);
+const hashedPass2 = bcrypt.hashSync("pequeno", 10);
 
 const urlDatabase = {
-  b2xVn2: "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com",
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW",
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW",
+  },
 };
 
 const users = {
   userRandomID: {
     id: "userRandomID",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur",
+    password: hashedPass1,
   },
-  user2RandomID: {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: "dishwasher-funk",
+  aJ48lW: {
+    id: "aJ48lW",
+    email: "pequeno_pollo@pampa.com",
+    password: hashedPass2,
   },
 };
 
-//Helpers
-const generateRandomString = (length) => {
-  let result = "";
-  const characters =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  const charactersLength = characters.length;
-  for (let i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength));
-  }
-  return result;
-};
+//------ APP ------
 
-const getUserByEmail = (database, email) => {
-  return Object.keys(database).find(
-    (userID) => database[userID].email === email
-  );
-};
-
-//Renders
-
-app.get("/urls", (req, res) => {
-  if (!users[req.cookies["user_id"]]) {
-    res.redirect("/login");
-  }
-  const templateVars = {
-    urls: urlDatabase,
-    user: users[req.cookies["user_id"]],
-  };
-  res.render("urls_index", templateVars);
+app.get("/", (req, res) => {
+  res.redirect("/urls");
 });
 
-app.get("/urls/new", (req, res) => {
-  if (!users[req.cookies["user_id"]]) {
-    res.redirect("/login");
-  }
-  const templateVars = {
-    user: users[req.cookies["user_id"]],
-  };
-  res.render("urls_new", templateVars);
-});
-
+//Register
 app.get("/register", (req, res) => {
-  if (users[req.cookies["user_id"]]) {
-    res.redirect("/urls");
-  }
-  const templateVars = {
-    urls: urlDatabase,
-    user: users[req.cookies["user_id"]],
-  };
+  const UserID = req.session.UserID;
+  const loggedUser = users[UserID];
+  const templateVars = { user: loggedUser };
   res.render("urls_register", templateVars);
 });
 
-app.get("/urls/:id", (req, res) => {
-  if (!urlDatabase[req.params.id]) {
-    res.send("URL not found");
+app.post("/register", (req, res) => {
+  const { email, password } = req.body;
+  const userFound = getUserByEmail(email, users);
+  if (!email || !password) {
+    res.status(400).send("Please enter a valid email/password combination.");
   }
-  const templateVars = {
-    id: req.params.id,
-    longURL: urlDatabase[req.params.id],
-    user: users[req.cookies["user_id"]],
-  };
-  res.render("urls_show", templateVars);
+  if (userFound) {
+    res.status(400).send("Email address is already registered.");
+    return;
+  }
+  const UserID = createUser(email, password, users);
+  req.session.UserID = UserID;
+  res.redirect("/urls");
 });
 
+//Login
 app.get("/login", (req, res) => {
-  const templateVars = {
-    urls: urlDatabase,
-    user: users[req.cookies["user_id"]],
-  };
+  const templateVars = { user: null };
   res.render("urls_login", templateVars);
 });
 
-//Posts
+app.post("/login", (req, res) => {
+  const { email, password } = req.body;
+  const user = authenticateUser(email, password, users);
+  if (!user) {
+    return res.status(403).send("Wrong email/password combination.");
+  }
+  req.session.UserID = user.id;
+  return res.redirect("urls");
+});
+
+//Logout
+app.post("/logout", (req, res) => {
+  req.session = null;
+  res.redirect("/urls");
+});
+
+//URLs Index
+app.get("/urls", (req, res) => {
+  const UserID = req.session.UserID;
+  const loggedUser = users[UserID];
+  if (loggedUser) {
+    const userUrls = urlsForUser(urlDatabase, UserID);
+    const templateVars = { urls: userUrls, user: loggedUser, id: UserID };
+    res.render("urls_index", templateVars);
+  }
+  res.redirect("login");
+});
 
 app.post("/urls", (req, res) => {
-  if (!req.cookies["user_id"]) {
-    res.redirect("/login");
-  }
   const shortURL = generateRandomString(6);
+  const UserID = req.session.UserID;
   const longURL = req.body.longURL;
-  urlDatabase[shortURL] = longURL;
-  res.redirect(`/urls/${shortURL}`);
-});
-
-app.post("/urls/:id/delete", (req, res) => {
-  delete urlDatabase[req.params.id];
+  urlDatabase[shortURL] = { longURL: longURL, userID: UserID };
   res.redirect("/urls");
 });
 
-app.post("/urls/:id/edit", (req, res) => {
-  if (users[req.cookies["user_id"]]) {
-    res.redirect("/login");
+//New URL
+app.get("/urls/new", (req, res) => {
+  const UserID = req.session.UserID;
+  const loggedUser = users[UserID];
+  const templateVars = { user: loggedUser };
+  if (!loggedUser) {
+    return res.redirect("/login");
   }
-  const editedLongURL = req.body.editedLongURL;
-  const shortURL = req.params.id;
-  urlDatabase[shortURL] = editedLongURL;
-  res.redirect("/urls");
+  return res.render("urls_new", templateVars);
 });
 
-app.post("/login", (req, res) => {
-  const email = req.body.email;
-  const password = req.body.password;
-  const userID = getUserByEmail(users, email);
-  if (!email && !password) {
-    res.status(400).end("Invalid field");
-  }
-  if (!getUserByEmail(users, email)) {
-    res.status(403).end("No account associated with the email address");
-  }
-
-  if (users[userID].password !== password) {
-    res.status(403).end("Incorrect Password");
-  }
-
-  res.cookie("user_id", userID);
-  res.redirect("/urls");
-});
-
-app.post("/logout", (req, res) => {
-  res.clearCookie("user_id");
-  res.redirect("/login");
-});
-
-app.post("/register", (req, res) => {
-  const email = req.body.email;
-  const password = req.body.password;
-  if (!email || !password) {
-    res.status(400).end("Invalid field");
-  }
-  if (getUserByEmail(users, email)) {
-    res.status(400).end("Email address is already registered");
-  }
-  const userId = generateRandomString(10);
-  users[userId] = {
-    id: userId,
-    email: req.body.email,
-    password: req.body.password,
+//URL<shortURL>
+app.get("/urls/:id", (req, res) => {
+  const UserID = req.session.UserID;
+  const loggedUser = users[UserID];
+  const templateVars = {
+    shortURL: req.params.id,
+    longURL: urlDatabase[req.params.id],
+    user: loggedUser,
   };
-
-  res.cookie("user_id", userId);
-  console.log(users);
-  res.redirect("urls/");
+  if (!loggedUser) {
+    return res.redirect("/login");
+  }
+  return res.render("urls_show", templateVars);
 });
 
+app.post("/urls/:id", (req, res) => {
+  const shortURL = req.params.id;
+  const urlContent = req.body.urlContent;
+  urlDatabase[shortURL].longURL = urlContent;
+  res.redirect("/urls");
+});
+
+//URL<longURL>
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id];
+  const shortURL = req.params.id;
+  const longURL = urlDatabase[shortURL].longURL;
   res.redirect(longURL);
 });
 
-//Listen
+//Delete URL
+app.post("/urls/:id/delete", (req, res) => {
+  const UserID = req.session.UserID;
+  const loggedUser = users[UserID];
+  const shortURL = req.params.id;
+  if (!loggedUser) {
+    return res.redirect("/login");
+  }
+  delete urlDatabase[shortURL];
+  return res.redirect("/urls");
+});
 
+//------ LISTEN ------
 app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
+  console.log(`Tiny app listening on port ${PORT}!`);
 });
