@@ -139,8 +139,9 @@ app.get("/urls/new", (req, res) => {
   return res.render("urls_new", templateVars);
 });
 
-//URL<shortURL>
+//ShortURL redirect
 app.get("/urls/:id", (req, res) => {
+  const shortURL = req.params.id;
   const UserID = req.session.UserID;
   const loggedUser = users[UserID];
   const templateVars = {
@@ -151,9 +152,15 @@ app.get("/urls/:id", (req, res) => {
   if (!loggedUser) {
     return res.redirect("/login");
   }
-  return res.render("urls_show", templateVars);
+  //Permission
+  const userUrls = urlsForUser(urlDatabase, UserID);
+  if (shortURL in userUrls) {
+    return res.render("urls_show", templateVars);
+  }
+  return res.status(403).send("Not allowed");
 });
 
+//Edit longURL
 app.post("/urls/:id", (req, res) => {
   const shortURL = req.params.id;
   const urlContent = req.body.urlContent;
@@ -161,7 +168,7 @@ app.post("/urls/:id", (req, res) => {
   return res.redirect("/urls");
 });
 
-//URL<longURL>
+//Long URL redirect
 app.get("/u/:id", (req, res) => {
   const shortURL = req.params.id;
   const longURL = urlDatabase[shortURL].longURL;
