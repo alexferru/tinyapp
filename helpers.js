@@ -16,7 +16,7 @@ const generateRandomString = (length) => {
 };
 
 // The function looks for the email key inside the database object and returns
-// the user object that matches the email key,
+// the userID that matches the email key,
 // if the key doesn't match, it returns false
 const getUserByEmail = (email, database) => {
   for (let userID in database) {
@@ -54,7 +54,7 @@ const createUser = (email, password, database) => {
   return userID;
 };
 
-//The function returns a user object that matches the parameters
+//The function returns the userID that matches the parameters
 // if the user is not found returns false
 const authenticateUser = (email, password, database) => {
   const userFound = getUserByEmail(email, database);
