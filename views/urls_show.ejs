@@ -23,18 +23,19 @@
       </div>
       <div class="card-footer text-muted"></div>
       <div class="card-body d-flex flex-column justify-content-center card text-white bg-dark">
-      <h3 class="card-title">Edit</h3>
+      <h3 class="card-title">Edit URL</h3>
       <form class="form-inline justify-content-center" action="/urls/<%= shortURL %>" method="POST">
         <div class="form-group mb-2>
-          <label for="longURL">New URL:</label>
+          <label for="urlContent">Enter the new URL:</label>
           <input
             class="form-control"
             type="text"
-            name="editedLongURL"
+            name="urlContent"
+            id="url"
             placeholder="http://"
             style="width: 300px; margin: 1em"
           />
-          <button type="submit" class="btn btn-outline-warning">Submit</button
+          <button type="submit" class="btn btn-outline-warning">Submit</button>
     </div>
     <!-- Bootstrap JS -->
     <script
