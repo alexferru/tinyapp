@@ -31,22 +31,29 @@
         </div>
     <% } else {%>
     <main style="margin: 1em">
-      <h3>My URLs</h3>
-      <table class="table">
-        <thead>
+      <div
+        class="card-body d-flex flex-column justify-content-center card text-white bg-dark"
+        style="height: 100px"
+      >
+        <h3 class="card-title mx-auto" style="margin-bottom: 10px ">My URLs</h3>
+        </div>
+      <table class="table table-hover table-dark">
+        <thead class="">
           <tr>
             <th scope="col">Short URL</th>
             <th scope="col">Long URL</th>
+            <th scope="col">Edit</th>
+              <th scope="col">Delete</th>
           </tr>
         </thead>
         <tbody>
           <% for (let url in urls) { %>
           <tr>
-            <td><a href="/u/<%= url %>"><%= url %></a></td>
-            <td><%= urls[url].longURL %></td>
+            <td><a href="/u/<%= url %>" class="badge badge-light"><%= url %></a></td>
+            <td><a href="/u/<%= url %>" class="badge badge-dark"><%= urls[url].longURL %></a></td>
             <td>
               <form method="GET" action="/urls/<%= url %>">
-                <button type="submit" class="btn btn-outline-primary">
+                <button type="submit" class="btn btn-outline-warning">
                   Edit
                 </button>
               </form>
