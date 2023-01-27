@@ -59,7 +59,7 @@ const users = {
 //------ APP ------
 
 app.get("/", (req, res) => {
-  res.redirect("/urls");
+  return res.redirect("/urls");
 });
 
 //Register
@@ -67,28 +67,29 @@ app.get("/register", (req, res) => {
   const UserID = req.session.UserID;
   const loggedUser = users[UserID];
   const templateVars = { user: loggedUser };
-  res.render("urls_register", templateVars);
+  return res.render("urls_register", templateVars);
 });
 
 app.post("/register", (req, res) => {
   const { email, password } = req.body;
   const userFound = getUserByEmail(email, users);
   if (!email || !password) {
-    res.status(400).send("Please enter a valid email/password combination.");
+    return res
+      .status(400)
+      .send("Please enter a valid email/password combination.");
   }
   if (userFound) {
-    res.status(400).send("Email address is already registered.");
-    return;
+    return res.status(400).send("Email address is already registered.");
   }
   const UserID = createUser(email, password, users);
   req.session.UserID = UserID;
-  res.redirect("/urls");
+  return res.redirect("/urls");
 });
 
 //Login
 app.get("/login", (req, res) => {
   const templateVars = { user: null };
-  res.render("urls_login", templateVars);
+  return res.render("urls_login", templateVars);
 });
 
 app.post("/login", (req, res) => {
@@ -104,7 +105,7 @@ app.post("/login", (req, res) => {
 //Logout
 app.post("/logout", (req, res) => {
   req.session = null;
-  res.redirect("/urls");
+  return res.redirect("/urls");
 });
 
 //URLs Index
@@ -114,9 +115,9 @@ app.get("/urls", (req, res) => {
   if (loggedUser) {
     const userUrls = urlsForUser(urlDatabase, UserID);
     const templateVars = { urls: userUrls, user: loggedUser, id: UserID };
-    res.render("urls_index", templateVars);
+    return res.render("urls_index", templateVars);
   }
-  res.redirect("login");
+  return res.redirect("login");
 });
 
 app.post("/urls", (req, res) => {
@@ -124,7 +125,7 @@ app.post("/urls", (req, res) => {
   const UserID = req.session.UserID;
   const longURL = req.body.longURL;
   urlDatabase[shortURL] = { longURL: longURL, userID: UserID };
-  res.redirect("/urls");
+  return res.redirect("/urls");
 });
 
 //New URL
@@ -157,14 +158,14 @@ app.post("/urls/:id", (req, res) => {
   const shortURL = req.params.id;
   const urlContent = req.body.urlContent;
   urlDatabase[shortURL].longURL = urlContent;
-  res.redirect("/urls");
+  return res.redirect("/urls");
 });
 
 //URL<longURL>
 app.get("/u/:id", (req, res) => {
   const shortURL = req.params.id;
   const longURL = urlDatabase[shortURL].longURL;
-  res.redirect(longURL);
+  return res.redirect(longURL);
 });
 
 //Delete URL

@@ -26,4 +26,8 @@ describe("getUserByEmail", () => {
     const expectedUserID = "userRandomID";
     // Write your assert statement here
   });
+  it("should return false if the email doesn't match an user", () => {
+    const result = getUserByEmail("user@examplo.com", testUsers);
+    assert(!result);
+  });
 });
